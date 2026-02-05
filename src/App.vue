@@ -12,7 +12,7 @@
         hide-details
         class="ma-1 mr-10"
       />
-      <v-btn @click="submit" class="ma-1">Submit</v-btn>
+      <v-btn @click="submit(valuish)" class="ma-1">Submit</v-btn>
     </div>
 
     <!-- Chess board -->
@@ -120,6 +120,16 @@ function onSquareClick(e: Event) {
   clearHighlights();
 }
 
+function getDelta(from: Square, to: Square) {
+  const fileFrom = from.charCodeAt(0) - "a".charCodeAt(0);
+  const rankFrom = parseInt(from[1], 10) - 1;
+
+  const fileTo = to.charCodeAt(0) - "a".charCodeAt(0);
+  const rankTo = parseInt(to[1], 10) - 1;
+
+  return `X: ${fileTo - fileFrom}, Y: ${rankTo - rankFrom}`;
+}
+
 // ---------- CHESS INIT ----------
 
 function onDrop(source: string, target: string) {
@@ -135,6 +145,10 @@ function onDrop(source: string, target: string) {
     promotion: "q",
   });
 
+  console.log("move", move.from, move.to);
+  const coordinates = getDelta(move.from, move.to);
+  console.log("new", coordinates);
+
   if (!move) {
     selectedSquare = null;
     clearHighlights();
@@ -144,6 +158,7 @@ function onDrop(source: string, target: string) {
   selectedSquare = null;
   clearHighlights();
   board.position(game.fen());
+  submit(coordinates);
 }
 
 onMounted(() => {
@@ -162,26 +177,13 @@ onMounted(() => {
 // --------------------------------
 
 // Existing code (unchanged)
-const submit = async () => {
-  console.log("Submited: ", valuish.value);
+const submit = async (message: string) => {
+  console.log("Submited: ", message);
 
   const response = await api("POST", "/send-message", {
-    message: valuish.value,
+    message: message,
   });
   console.log(response);
-};
-
-const pressESP = async () => {
-  let error: any = null;
-  const response = await api("GET", "/btn-pressed", null).catch(
-    (err) => (error = err),
-  );
-  console.log("response", response);
-  if (error || !response) {
-    console.error(error ? error : "Internal error. Please try again later.");
-    return null;
-  }
-  return response;
 };
 
 const sendMessage = async () => {
